@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+    <title>3.js测试四</title>
+</head>
+<style>
+    body{
+        margin: 0px;
+        padding: 0px;
+        background-color: rgb(0, 0, 0);
+    }
+    .globe{
+        width: 320px;
+        height: 320px;
+        position: relative;
+        margin: 0px auto;
+        /* transform: scale(0.1);
+        animation: explode 2s forwards ;
+        -webkit-animation-timing-function:cubic-bezier(.36,-0.6,.73,1.42);
+        animation-timing-function: cubic-bezier(.36,-0.6,.73,1.42); */
+        
+    }
+    #mainCanvas{
+        position: absolute;
+        width: 320px;
+        height: 320px;
+        top: 0px;
+        left: 0px;
+
+        z-index: 1;
+    }
+    .point{
+        width: 20px;
+        height: 20px;
+        position: absolute;
+        text-align: center;
+        z-index: 2;
+    }
+    .name {
+        width: 80px;
+        height: 10px;
+        position: absolute;
+        z-index: 0;
+        color:wheat
+        
+    }
+    .point-color{
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        background-color: red;
+        margin: 0px auto
+    }
+    @keyframes explode {
+        form{
+            transform: scale(0.1);
+        }
+        to{
+            transform: scale(1)
+        }
+    }
+</style>
+<script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+
+<body style="user-select:none">
+    <br>
+    <div class="globe">
+
+        <div id="frontCanvas" style="height:inherit;width:inherit;">
+            <canvas id="mainCanvas" ></canvas>
+        </div>
+        
+
+    </div>
+
+</body>
+<script type="text/javascript" src="three.min.js"></script>
+<script src="Object3D.js"></script>
+<script src="DragControls.js"></script>
+<script src="TrackballControls.js"></script>
+<script src="Projector.js"></script>
+<script type="text/javascript">
+    var halfWidth;
+    var halfHeight;
+    var data = [];
+
+    $(document).ready(function () {
+        halfWidth = $("#frontCanvas").width() / 2;
+        halfHeight = $("#frontCanvas").height() / 2;
+        console.log(halfWidth, halfHeight);
+    //     let target = document.getElementById('mainCanvas');
+    //     let p = document.getElementById('frontCanvas');
+    //     target.addEventListener('click',function(ev){
+           
+    //         let eventObj = new MouseEvent('click',{clientX:ev.clientX,clientY:ev.clientY});
+    //         console.log(eventObj);
+    //         p.dispatchEvent(eventObj);
+
+    //     });
+    //     p.addEventListener('click',function(ev){
+          
+
+    //    });
+        for (let index = 0; index < 42; index++) {
+            data[index] = { name: '番茄炒蛋'+index, color: '#cccccc', id: index };
+            var temp = '<div class="point" ><div class="point-color" onclick="toPage(' + data[index].id + ')"></div></div><p class="name"></p>';
+
+            $("#frontCanvas").append(temp);
+
+        }
+        init();
+    })
+    function toPage(id) {
+        alert(id);
+    }
+    function init(json) {
+
+        renderer = new THREE.WebGLRenderer({
+            canvas: document.getElementById('mainCanvas'),
+            alpha: true
+        });
+        renderer.setClearColor(0x000000, 0);
+        scene = new THREE.Scene();
+        
+        // camera
+        //camera = new THREE.OrthographicCamera(-5, 5, 3.75, -3.75, 0.1, 1000);
+        camera = new THREE.PerspectiveCamera(10, 1, 1, 2000);
+        camera.position.set(0, 0,8000);
+        camera.lookAt(new THREE.Vector3(0, 0, 0));
+        
+        scene.add(camera);
+        
+        // 材质
+        var material = new THREE.PointsMaterial({ color: new THREE.Color(0x00000, 0), size: 0, sizeAttenuation: true });
+        drawSphere(scene, material);    //球体
+
+        // render
+
+        var controls = new THREE.TrackballControls(camera, renderer.domElement, sphere);
+
+        function drawSphere(scene, material) {
+            Geometry = new THREE.SphereGeometry(20, 8, 6);
+
+            sphere = new THREE.Points(Geometry, material);
+            //          var sphere = new THREE.Mesh(new THREE.SphereGeometry(3, 8, 6, Math.PI / 6, Math.PI / 3), material);
+            //          var sphere = new THREE.Mesh(new THREE.SphereGeometry(3, 8, 6, 0, Math.PI * 2, Math.PI / 6, Math.PI / 3), material);
+            //            var sphere = new THREE.Mesh(new THREE.SphereGeometry(3, 8, 6, Math.PI / 2, Math.PI, Math.PI / 6, Math.PI / 2), material);
+            sphere.dynamic = true;
+            scene.add(sphere);
+
+            //console.log(sphere);
+            // console.log(sphere.geometry.vertices.length);
+
+        }
+        function animate() {
+            // if (selectObject != undefined && selectObject != null) {
+            //     renderDiv(selectObject);
+            // }
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+            // drawCricle(sphere.geometry.vertices);
+            
+            update();
+        }
+        function update() {
+            console.log(camera.position);
+            sphere.geometry.dynamic = true;
+            controls.update();
+            controls.handleResize();
+            sphere.updateMatrix ();
+            var updateScreenPoints = toScreenPoint(sphere.geometry.vertices);
+            for (let index = 0; index < updateScreenPoints.length; index++) {
+                console.log(sphere.geometry.vertices);
+                $(".name").eq(index).html(data[index].name);
+                $(".name").eq(index).css({ top: updateScreenPoints[index].y-45, left: updateScreenPoints[index].x-20, 'webkitTransform': 'scale(' + updateScreenPoints[index].z + ')', 'transform': 'scale(' + updateScreenPoints[index].z + ')' });
+                $(".point").eq(index).find(".point-color").eq(0).css({ 'background-color': data[index].color });
+                $(".point").eq(index).css({ top: updateScreenPoints[index].y, left: updateScreenPoints[index].x, 'webkitTransform': 'scale(' + updateScreenPoints[index].z + ')', 'transform': 'scale(' + updateScreenPoints[index].z + ')' });
+
+            }
+            // updateScreenPoints.forEach((element, index) => {
+
+
+            //      //console.log(sphere.geometry.vertices);
+            //      $(".point").eq(index).find("p").eq(0).html(json[index].name);
+            //      $(".point").eq(index).find(".point-color").eq(0).css({ 'background-color':json[index].color});
+            //     $(".point").eq(index).css({ top: element.y, left: element.x ,'webkitTransform':'scale('+element.z+')','transform':'scale('+element.z+')'});
+            // })
+            // var screenPoints = toScreenPoint(Geometry.vertices);
+
+        }
+
+        animate();
+    }
+
+    init();
+
+
+    function toScreenPoint(arr) {
+        var result = [];
+        arr.forEach(element => {
+
+            var world_vector = new THREE.Vector3(element.x, element.y, element.z);
+            var vector = world_vector.project(camera);
+            var distance = 200;
+            var depthX = Math.abs( element.z)/15;
+            
+            //console.log(element.z);
+            result.push({
+                x: Math.round(vector.x * halfWidth + halfWidth),
+                y: Math.round(-vector.y * halfHeight + halfHeight),
+                z: 1
+            });
+        });
+
+        return result;
+    }
+
+
+
+
+
+
+
+
+
+
+</script>
+
+</html>
