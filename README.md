@@ -1,6 +1,5 @@
-# OpenGL-
-自行原创基于 Three.js 的插件库
-#插件列表
+# OpenGL- 自行原创基于 Three.js 的插件库
+# 插件列表
 ---
-##globe.html 
+# globe.html 
 仿soul 球体 控件
